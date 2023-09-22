@@ -1,73 +1,88 @@
+# frozen_string_literal: true
+
 require 'colorize'
 
-# will add documentation later
-module Messages
-  def show_colors
-    puts '  1  '.colorize(:black).on_white + '  2  '.colorize(:black).on_light_red +
-         '  3  '.colorize(:black).on_yellow + '  4  '.colorize(:black).on_magenta +
-         '  5  '.colorize(:black).on_green + '  6  '.colorize(:black).on_cyan
-    puts 'Please enter a four digit code (only enter numbers).'
-  end
-end
-
-# will add documentation later
+# This section is used to handle most of our messages, and the starting conditions of our game
 class GameStart
   attr_reader :choice
 
   def greetings
-    puts '## Welcome to my amazingly coded game of "Mastermind"! ##'
-    puts 'Would you like to be the CODEMAKER, or the CODEBREAKER?'
-    puts 'Type "1" for CODEMAKER, or "2" for CODEBREAKER.'
+    puts ''
+    puts '### Welcome to my good-enoughly(?) coded game of "Mastermind"! ###'
+    puts '  Would you like to be the CODEMAKER, or the CODEBREAKER?'
+    puts '  Send "1" for CODEMAKER, or "2" for CODEBREAKER.'
+    puts '  Also, if you want to know the rules, send "3".'
   end
 
   def game_choice
     @choice = gets.chomp
-    if @choice == '1'
-      puts "You're the CODEMAKER! Pick your code and good luck!"
-    elsif @choice == '2'
-      puts "You're the CODEBREAKER! Good luck cracking that code!"
-    else
-      puts 'Please pick a valid option. Type "1" for CODEMAKER, or "2" for CODEBREAKER.'
-      game_choice
+    case
+    when @choice == '1' then puts "  You're the CODEMAKER! Pick your code and good luck!"
+    when @choice == '2' then puts "  You're the CODEBREAKER! Good luck! You have 10 tries left."
+    when @choice == '3' then tutorial
+    else puts '  Please pick a valid option.' && game_choice
     end
+  end
+
+  def tutorial
+    puts ''
+    puts '  Mastermind is a game where the CODEMAKER builds a four-digit code, and the CODEBREAKER '
+    puts 'must guess that code. The CODEMAKER will pick digits ranging from 1 to 6 to build their'
+    puts "code. For example, '2454' is a valid code, while '9495' isn't."
+    puts ''
+    puts '  The CODEBREAKER has 10 turns to guess the code. Every time they take a guess, little   '
+    puts 'dots will show up telling you how good your guess was.'
+    puts ''
+    puts '  "o" means you guessed a right digit, but it was in the wrong spot.'
+    puts '  "o"'.red << ' means you guessed a right digit in the right spot.'
+    puts '  If no dots show up, your guess was completely wrong.'
+    puts ''
+    puts '  If the CODEBREAKER manages to crack the code, the CODEBREAKER wins. Otherwise, the     '
+    puts 'CODEMAKER wins. Now, Send "1" for CODEMAKER, or "2" for CODEBREAKER.'
+    puts ''
+
+    game_choice
   end
 end
 
-# will add documentation later
+# This section handles all moves made by the computer
 class Computer
   attr_reader :mastermind_code
 
   def build_mastermind_code
     @mastermind_code = []
     @mastermind_code.push(rand(1..6).to_s) until @mastermind_code.length == 4
+
+    puts '  Beep boop, I doubt an organic organism will be able to crack my code!'
+    puts '  *evil computer noises*'
+    puts ''
   end
 end
 
-# will add documentation later
+# This section handles all moves made by the player
 class Player
-  include Messages
-
   def initialize(mastermind_code)
     @mastermind_code = mastermind_code
-    p @mastermind_code
   end
 
   def guessing
-    show_colors
     @guess = gets.chomp.to_s.split('')
-    puts 'Invalid code. Please enter a four digit code.' && guessing unless @guess.length == 4
+    puts '  Invalid code. Please enter a four digit code.' && guessing unless @guess.length == 4
   end
 
   def code_broken?
     (1..11).each do |i|
       if @guess == @mastermind_code
-        puts 'You broke the code! Great job!'
+        puts '  You cracked the code! Great job!'
         break
-      elsif i <= 10 && @guess != @mastermind_code
-        puts "Not quite. Try again! You have #{10 - i} tries left!"
+      elsif i < 10 && @guess != @mastermind_code
+        puts "  Not quite. Try again! You have #{10 - i} tries left!"
         getting_tips(@guess, @mastermind_code)
-      elsif i == 11 && @guess != @mastermind_code
-        puts "You didn't manage to break the code. Good luck next time!"
+      elsif i == 10 && @guess != @mastermind_code
+        puts '  Not quite. Try again! This is your last chance!'
+        getting_tips(@guess, @mastermind_code)
+      elsif i > 10 && @guess != @mastermind_code
+        puts "  You didn't manage to crack the code. It was #{@mastermind_code}. Good luck next time!"
       end
     end
   end
@@ -76,22 +91,22 @@ class Player
     tempguess = guess.dup
     tempcode = code.dup
 
-    3.downto(0) do |i|
-      if tempguess[i] == tempcode[i]
-        tempcode.delete_at(i)
-        tempguess.delete_at(i)
-        puts 'o'.red
+    exact_matches = []
+    guess.each_with_index do |element, index|
+      if element == tempcode[index]
+        exact_matches << index
+        tempcode[index] = nil
       end
     end
 
-    3.downto(0) do |i|
-      if tempcode.include?(tempguess[i])
-        puts 'o'
-        tempcode.delete_at(i)
-        tempguess.delete_at(i)
-      end
-    end
+    exact_matches.each { |_| puts 'o'.red }
 
+    tempguess.each_with_index do |element, _|
+      next unless element && tempcode.include?(element)
+
+      puts 'o'
+      tempcode[tempcode.index(element)] = nil
+    end
     guessing
   end
 end
@@ -108,5 +123,7 @@ if newgame.choice == '2'
   codebreaker.code_broken?
 end
 
-# puts '  1  '.on_red
-# puts 'ooo'.red + 'o'.white
+### things to do ###
+# 1 - Write the algorithm for the computer to play as the CODEBREAKER
+# 2 - Improve error handling in case user enters an invalid code in the 'guessing' method
+# 3 - Add a condition to replay the game after you finish a match
