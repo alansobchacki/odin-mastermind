@@ -96,23 +96,22 @@ class Player
   def getting_tips(guess, code)
     tempguess = guess.dup
     tempcode = code.dup
-    exact_matches = []
 
-    guess.each_with_index do |element, index|
-      if element == tempcode[index]
-        exact_matches << index
-        tempcode[index] = nil
-      end
+    (tempguess.length - 1).downto(0) do |i|
+      next unless tempguess[i] == tempcode[i]
+
+      tempguess.delete_at(i)
+      tempcode.delete_at(i)
+      puts 'x'.red
     end
 
-    exact_matches.each { |_| puts 'x'.red }
+    (tempguess.length - 1).downto(0) do |i|
+      next unless tempcode.include?(tempguess[i])
 
-    tempguess.each_with_index do |element, _|
-      next unless element && tempcode.include?(element)
-
+      tempguess.delete_at(i)
       puts 'x'
-      tempcode[tempcode.index(element)] = nil
     end
+
     guessing
   end
 end
