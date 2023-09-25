@@ -33,8 +33,8 @@ class GameStart
     puts '  The CODEBREAKER has 10 turns to guess the code. Every time they take a guess, little   '
     puts 'dots will show up telling you how good your guess was.'
     puts ''
-    puts '  "o" means you guessed a right digit, but it was in the wrong spot.'
-    puts '  "o"'.red << ' means you guessed a right digit in the right spot.'
+    puts '  "x" means you guessed a right digit, but it was in the wrong spot.'
+    puts '  "x"'.red << ' means you guessed a right digit in the right spot.'
     puts '  If no dots show up, your guess was completely wrong.'
     puts ''
     puts '  If the CODEBREAKER manages to crack the code, the CODEBREAKER wins. Otherwise, the     '
@@ -53,7 +53,6 @@ class Computer
     @mastermind_code = []
     @mastermind_code.push(rand(1..6).to_s) until @mastermind_code.length == 4
 
-    puts '  Beep boop, I doubt an organic organism will be able to crack my code!'
     puts '  *evil computer noises*'
     puts ''
   end
@@ -67,7 +66,14 @@ class Player
 
   def guessing
     @guess = gets.chomp.to_s.split('')
-    puts '  Invalid code. Please enter a four digit code.' && guessing unless @guess.length == 4
+    valid_digits = %w[1 2 3 4 5 6]
+    @guess.each do |element|
+      next unless valid_digits.include?(element) == false || @guess.length != 4
+
+      puts '  Invalid code. Please enter a four digit code with values ranging from 1 to 6.'
+      guessing
+      break
+    end
   end
 
   def code_broken?
@@ -90,8 +96,8 @@ class Player
   def getting_tips(guess, code)
     tempguess = guess.dup
     tempcode = code.dup
-
     exact_matches = []
+
     guess.each_with_index do |element, index|
       if element == tempcode[index]
         exact_matches << index
@@ -99,12 +105,12 @@ class Player
       end
     end
 
-    exact_matches.each { |_| puts 'o'.red }
+    exact_matches.each { |_| puts 'x'.red }
 
     tempguess.each_with_index do |element, _|
       next unless element && tempcode.include?(element)
 
-      puts 'o'
+      puts 'x'
       tempcode[tempcode.index(element)] = nil
     end
     guessing
@@ -125,5 +131,5 @@ end
 
 ### things to do ###
 # 1 - Write the algorithm for the computer to play as the CODEBREAKER
-# 2 - Improve error handling in case user enters an invalid code in the 'guessing' method
 # 3 - Add a condition to replay the game after you finish a match
+# 4 - Add comments on every method you've built
