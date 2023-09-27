@@ -2,6 +2,19 @@
 
 require 'colorize'
 
+# This module allow us to restart or close the game after a match is completed
+module SettingsHelper
+  def play_again?
+    puts '  Would you like to play again? Type "1" for Yes and "2" for No.'
+    rematch = gets.chomp.to_s
+
+    if rematch == '1' then game_started
+    elsif rematch == '2' then puts "   Thank you for playing MASTERMIND, hope you've had fun!"
+    else puts 'Please pick a valid option' && play_again?
+    end
+  end
+end
+
 # This class section is used to handle most of our messages, and the settings of our game
 class GameSettings
   attr_reader :choice
@@ -12,10 +25,12 @@ class GameSettings
     puts '  Would you like to be the CODEMAKER, or the CODEBREAKER?'
     puts '  Send "1" for CODEMAKER, or "2" for CODEBREAKER.'
     puts '  Also, if you want to know the rules, send "3".'
+    game_choice
   end
 
   def game_choice
     @choice = gets.chomp
+
     case
     when @choice == '1' then puts "  You're the CODEMAKER! Build a four digit code with values ranging from 1 to 6!"
     when @choice == '2' then puts "  You're the CODEBREAKER! Good luck! You have 10 tries left."
@@ -55,7 +70,7 @@ class GameSettings
   def player_is_codemaster
     codemaster = Player.new('')
     codemaster.build_mastermind_code
-    codebreaker = Computer.new(codemaster.mastermind_code)
+    codebreaker = Computer.new(codemaster.player_mastermind_code)
     codebreaker.guessing
     codebreaker.code_broken?
   end
@@ -64,6 +79,8 @@ end
 # This class section handles all moves made by the computer
 class Computer
   attr_reader :computer_mastermind_code
+
+  include SettingsHelper
 
   def initialize(mastermind_code)
     @player_mastermind_code = mastermind_code
@@ -76,15 +93,40 @@ class Computer
     puts '  *evil computer noises*'
     puts ''
   end
+
+  def guessing
+    @guess = []
+    @guess.push(rand(1..6).to_s) until @guess.length == 4
+  end
+
+  def code_broken?
+    (1..11).each do |i|
+      if @guess == @player_mastermind_code
+        puts "  I beat you, human! Your code was #{@player_mastermind_code}!"
+        play_again?
+        break
+      elsif i < 10 && @guess != @player_mastermind_code
+        puts "  Bah! #{@guess} wasn't right?? I will get you, eventually... beep."
+        guessing
+      elsif i > 10 && @guess != @player_mastermind_code
+        puts '  I am... defeated....bop..'
+        play_again?
+      end
+    end
+  end
 end
 
 # This class section handles all moves made by the player
 class Player
   attr_reader :player_mastermind_code
 
+  include SettingsHelper
+
   def initialize(mastermind_code)
     @computer_mastermind_code = mastermind_code
   end
+
+  # This method is only used if the player is the codemaker (building the code for the computer to guess)
 
   def build_mastermind_code
     @player_mastermind_code = gets.chomp.to_s.split('')
@@ -98,6 +140,8 @@ class Player
       break
     end
   end
+
+  # The methods below are only used if the player is the codebreaker (guessing the computer's code)
 
   def guessing
     @guess = gets.chomp.to_s.split('')
@@ -116,6 +160,7 @@ class Player
     (1..11).each do |i|
       if @guess == @computer_mastermind_code
         puts '  You cracked the code! Great job!'
+        play_again?
         break
       elsif i < 10 && @guess != @computer_mastermind_code
         puts "  Not quite. Try again! You have #{10 - i} tries left!"
@@ -125,6 +170,7 @@ class Player
         getting_tips(@guess, @computer_mastermind_code)
       elsif i > 10 && @guess != @computer_mastermind_code
         puts "  You didn't manage to crack the code. It was #{@computer_mastermind_code}. Good luck next time!"
+        play_again?
       end
     end
   end
@@ -152,17 +198,19 @@ class Player
   end
 end
 
-newgame = GameSettings.new
-newgame.greetings
-newgame.game_choice
+def game_started
+  newgame = GameSettings.new
+  newgame.greetings
 
-if newgame.choice == '1'
-  newgame.player_is_codemaster
-elsif newgame.choice == '2'
-  newgame.computer_is_codemaster
+  if newgame.choice == '1'
+    newgame.player_is_codemaster
+  elsif newgame.choice == '2'
+    newgame.computer_is_codemaster
+  end
 end
+
+game_started
 
 ### things to do ###
 # 1 - Write the algorithm for the computer to play as the CODEBREAKER
-# 3 - Add a condition to replay the game after you finish a match
-# 4 - Add comments on every method you've built
+# 3 - Add a condition to SettingsHelper the game after you finish a match
