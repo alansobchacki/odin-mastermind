@@ -15,7 +15,7 @@ module SettingsHelper
   end
 end
 
-# This class section is used to handle most of our messages, and the settings of our game
+# This class section is used to handle most basic settings of our game
 class GameSettings
   attr_reader :choice
 
@@ -71,7 +71,7 @@ class GameSettings
     codemaster = Player.new('')
     codemaster.build_mastermind_code
     codebreaker = Computer.new(codemaster.player_mastermind_code)
-    codebreaker.guessing
+    codebreaker.first_guess
     codebreaker.code_broken?
   end
 end
@@ -86,12 +86,21 @@ class Computer
     @player_mastermind_code = mastermind_code
   end
 
+  # This method is only used if the computer is the codemaker (building the code for the player to guess)
+
   def build_mastermind_code
     @computer_mastermind_code = []
     @computer_mastermind_code.push(rand(1..6).to_s) until @computer_mastermind_code.length == 4
 
     puts '  *evil computer noises*'
     puts ''
+  end
+
+  # The methods below are only used if the computer is the codebreaker (guessing the player's code)
+
+  def first_guess
+    @guess = []
+    @guess.push(rand(1..6).to_s) until @guess.length == 4
   end
 
   def guessing
@@ -105,9 +114,9 @@ class Computer
         puts "  I beat you, human! Your code was #{@player_mastermind_code}!"
         play_again?
         break
-      elsif i < 10 && @guess != @player_mastermind_code
+      elsif i <= 10 && @guess != @player_mastermind_code
         puts "  Bah! #{@guess} wasn't right?? I will get you, eventually... beep."
-        guessing
+        sleep 2 and guessing
       elsif i > 10 && @guess != @player_mastermind_code
         puts '  I am... defeated....bop..'
         play_again?
