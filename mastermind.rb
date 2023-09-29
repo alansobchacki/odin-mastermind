@@ -71,7 +71,7 @@ class GameSettings
     codemaster = Player.new('')
     codemaster.build_mastermind_code
     codebreaker = Computer.new(codemaster.player_mastermind_code)
-    codebreaker.first_guess
+    codebreaker.guessing
     codebreaker.code_broken?
   end
 end
@@ -84,6 +84,7 @@ class Computer
 
   def initialize(mastermind_code)
     @player_mastermind_code = mastermind_code
+    @guess = []
   end
 
   # This method is only used if the computer is the codemaker (building the code for the player to guess)
@@ -98,14 +99,21 @@ class Computer
 
   # The methods below are only used if the computer is the codebreaker (guessing the player's code)
 
-  def first_guess
-    @guess = []
-    @guess.push(rand(1..6).to_s) until @guess.length == 4
-  end
+  # First, the computer will take a random guess - like any human would
+  # Then, if the computer gets any correct digits (either place or value), they will narrow their random number
+  # generator with those results in mind
+  # Otherwise, they will take another random guess
 
   def guessing
-    @guess = []
-    @guess.push(rand(1..6).to_s) until @guess.length == 4
+    4.times.each do |i|
+      if @guess[i].nil? then @guess.push(rand(1..6).to_s)
+      elsif @guess[i] == @player_mastermind_code[i]
+        next
+      elsif @guess[i] != @player_mastermind_code[i]
+        @guess.delete_at(i)
+        @guess.insert(i, rand(1..6).to_s)
+      end
+    end
   end
 
   def code_broken?
@@ -118,7 +126,7 @@ class Computer
         puts "  Bah! #{@guess} wasn't right?? I will get you, eventually... beep."
         sleep 2 and guessing
       elsif i > 10 && @guess != @player_mastermind_code
-        puts '  I am... defeated....bop..'
+        puts '  I am... defeated....boop..'
         play_again?
       end
     end
@@ -219,7 +227,3 @@ def game_started
 end
 
 game_started
-
-### things to do ###
-# 1 - Write the algorithm for the computer to play as the CODEBREAKER
-# 3 - Add a condition to SettingsHelper the game after you finish a match
