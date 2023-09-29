@@ -99,11 +99,6 @@ class Computer
 
   # The methods below are only used if the computer is the codebreaker (guessing the player's code)
 
-  # First, the computer will take a random guess - like any human would
-  # Then, if the computer gets any correct digits (either place or value), they will narrow their random number
-  # generator with those results in mind
-  # Otherwise, they will take another random guess
-
   def guessing
     4.times.each do |i|
       if @guess[i].nil? then @guess.push(rand(1..6).to_s)
